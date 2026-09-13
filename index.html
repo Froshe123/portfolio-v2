@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio - Froshe</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #ffffff;
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* --- FILTRE BLEU GLOBAL --- */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 119, 255, 0.12);
+      mix-blend-mode: overlay;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    /* --- VIDÉO --- */
+    #bg-video {
+      position: fixed;
+      top: 0;
+      left: 35vw; 
+      width: 102vw;
+      height: 100vh;
+      z-index: -10;
+      object-fit: cover;
+      transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    body.is-started #bg-video {
+      transform: translateX(-34vw);
+    }
+
+    body.page-open #bg-video {
+      filter: blur(2px) brightness(0.5);
+    }
+
+    /* --- ÉCRAN START --- */
+    .start-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.2);
+      z-index: 100;
+      cursor: pointer;
+      transition: opacity 0.8s ease;
+    }
+
+    .start-text {
+      color: #00b4d8;
+      font-size: clamp(4rem, 8vw, 7rem);
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      transform: skewX(-10deg);
+      animation: pulse 1s infinite alternate;
+      text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.1);
+    }
+
+    @keyframes pulse {
+      0% { transform: skewX(-10deg) scale(0.95); opacity: 0.8; }
+      100% { transform: skewX(-10deg) scale(1.05); opacity: 1; }
+    }
+
+    body.is-started .start-screen {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* --- MENU DÉCALÉ ENCORE PLUS VERS LA GAUCHE --- */
+    .menu {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      position: relative;
+      gap: 6px;
+      padding-right: 32%; /* Décalé plus vers la gauche */
+      opacity: 0;
+      transform: translateX(10vw);
+      transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+      transition-delay: 0.3s;
+      z-index: 60;
+    }
+
+    body.is-started .menu {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    body.page-open .menu {
+      opacity: 0;
+      transform: translateX(10vw);
+      pointer-events: none;
+    }
+
+    .menu-item {
+      position: relative;
+      text-decoration: none;
+      text-transform: uppercase;
+      line-height: 0.85;
+      display: inline-block;
+      transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.1s;
+      z-index: 1;
+      padding: 4px 15px;
+      text-align: right;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+    }
+
+    /* --- TAILLES ET NUANCES DE BLEU --- */
+    .menu-name { color: #90e0ef; font-size: clamp(4.6rem, 7.4vw, 6.8rem); transform: rotate(-3deg) skewX(-10deg); text-shadow: 3px 3px 0px #0077b6; margin-bottom: 4px; }
+    .menu-item:nth-child(2) { color: #00b4d8; font-size: clamp(4.8rem, 7.6vw, 7.0rem); transform: rotate(4deg) skewX(8deg); }
+    .menu-item:nth-child(3) { color: #48cae4; font-size: clamp(4.2rem, 6.6vw, 6.1rem); transform: rotate(-5deg) skewX(-8deg); }
+    .menu-item:nth-child(4) { color: #0096c7; font-size: clamp(4.9rem, 7.8vw, 7.2rem); transform: rotate(3deg) skewX(10deg); }
+    .menu-item:nth-child(5) { color: #ade8f4; font-size: clamp(4.4rem, 6.8vw, 6.3rem); transform: rotate(-4deg) skewX(-6deg); }
+    .menu-item:nth-child(6) { color: #0077b6; font-size: clamp(4.6rem, 7.1vw, 6.6rem); transform: rotate(5deg) skewX(6deg); }
+    .menu-item:nth-child(7) { color: #caf0f8; font-size: clamp(4.3rem, 6.6vw, 6.2rem); transform: rotate(-3deg) skewX(-10deg); }
+
+    /* --- FONDS GÉOMÉTRIQUES PLUS VISIBLES AU SURVOL --- */
+    .menu-item::before, .menu-name::before {
+      content: '';
+      position: absolute;
+      top: -18px; bottom: -18px; left: -40px; right: -30px;
+      background: rgba(0, 140, 255, 0.55); /* Plus opaque et lumineux */
+      border: 2px solid #90e0ef; /* Bordure plus marquée */
+      box-shadow: 0 0 15px rgba(0, 180, 216, 0.5); /* Effet lumineux */
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.1s ease;
+      pointer-events: none;
+    }
+
+    /* Formes asymétriques uniques */
+    .menu-name::before         { clip-path: polygon(5% 0%, 100% 15%, 85% 100%, 0% 85%); }
+    .menu-item:nth-child(2)::before { clip-path: polygon(15% 0%, 95% 10%, 100% 90%, 0% 100%); }
+    .menu-item:nth-child(3)::before { clip-path: polygon(0% 10%, 90% 0%, 100% 85%, 10% 95%); }
+    .menu-item:nth-child(4)::before { clip-path: polygon(10% 5%, 100% 0%, 90% 100%, 0% 80%); }
+    .menu-item:nth-child(5)::before { clip-path: polygon(0% 0%, 85% 15%, 100% 100%, 15% 90%); }
+    .menu-item:nth-child(6)::before { clip-path: polygon(20% 0%, 100% 25%, 75% 100%, 0% 70%); }
+    .menu-item:nth-child(7)::before { clip-path: polygon(5% 15%, 95% 0%, 100% 85%, 10% 100%); }
+
+    /* Au survol */
+    .menu-name:hover {
+      z-index: 20;
+      color: #ffffff;
+      transform: rotate(-3deg) skewX(-10deg) scale(1.08) translateX(-10px) !important;
+      text-shadow: 0 0 20px rgba(144, 224, 239, 1);
+    }
+    .menu-item:nth-child(2):hover { transform: rotate(4deg) skewX(8deg) scale(1.08) translateX(-10px) !important; color: #ffffff; z-index: 20; text-shadow: 0 0 20px rgba(144, 224, 239, 1); }
+    .menu-item:nth-child(3):hover { transform: rotate(-5deg) skewX(-8deg) scale(1.08) translateX(-10px) !important; color: #ffffff; z-index: 20; text-shadow: 0 0 20px rgba(144, 224, 239, 1); }
+    .menu-item:nth-child(4):hover { transform: rotate(3deg) skewX(10deg) scale(1.08) translateX(-10px) !important; color: #ffffff; z-index: 20; text-shadow: 0 0 20px rgba(144, 224, 239, 1); }
+    .menu-item:nth-child(5):hover { transform: rotate(-4deg) skewX(-6deg) scale(1.08) translateX(-10px) !important; color: #ffffff; z-index: 20; text-shadow: 0 0 20px rgba(144, 224, 239, 1); }
+    .menu-item:nth-child(6):hover { transform: rotate(5deg) skewX(6deg) scale(1.08) translateX(-10px) !important; color: #ffffff; z-index: 20; text-shadow: 0 0 20px rgba(144, 224, 239, 1); }
+    .menu-item:nth-child(7):hover { transform: rotate(-3deg) skewX(-10deg) scale(1.08) translateX(-10px) !important; color: #ffffff; z-index: 20; text-shadow: 0 0 20px rgba(144, 224, 239, 1); }
+
+    .menu-item:hover::before, .menu-name:hover::before {
+      opacity: 1;
+    }
+
+    /* =========================================================
+       PAGES DE CONTENU (Projets / About Me)
+       ========================================================= */
+
+    .content-page {
+      position: fixed;
+      top: 0; right: 0;
+      width: min(720px, 92vw);
+      height: 100vh;
+      z-index: 70;
+      background: rgba(6, 20, 34, 0.88);
+      backdrop-filter: blur(6px);
+      border-left: 3px solid #48cae4;
+      box-shadow: -20px 0 60px rgba(0,0,0,0.5);
+      transform: translateX(105%);
+      transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+      overflow-y: auto;
+      font-family: 'Arial', sans-serif;
+      color: #e0f7ff;
+      padding: 90px 56px 80px;
+    }
+
+    .content-page.is-open {
+      transform: translateX(0);
+    }
+
+    .content-page::-webkit-scrollbar { width: 8px; }
+    .content-page::-webkit-scrollbar-thumb { background: #0077b6; border-radius: 10px; }
+
+    .page-close {
+      position: fixed;
+      top: 28px; right: 40px;
+      z-index: 80;
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      color: #90e0ef;
+      font-size: 2.4rem;
+      background: rgba(0, 140, 255, 0.25);
+      border: 2px solid #90e0ef;
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      line-height: 1;
+    }
+
+    body.page-open .page-close {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .page-close:hover {
+      background: rgba(0, 140, 255, 0.55);
+      transform: rotate(90deg);
+    }
+
+    .page-eyebrow {
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      color: #48cae4;
+      letter-spacing: 4px;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .page-title {
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      color: #ffffff;
+      font-size: clamp(2.4rem, 5vw, 3.4rem);
+      text-shadow: 3px 3px 0px #0077b6;
+      transform: skewX(-6deg);
+      margin-bottom: 32px;
+      text-transform: uppercase;
+    }
+
+    /* --- Projets --- */
+    .projects-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* --- Visualiseur 3D interactif --- */
+    .model-block {
+      margin-bottom: 30px;
+    }
+
+    .model-viewer-frame {
+      width: 100%;
+      height: 380px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: linear-gradient(155deg, rgba(0,20,40,0.6), rgba(0,60,110,0.3));
+      border: 1px solid rgba(144, 224, 239, 0.25);
+      position: relative;
+    }
+
+    .model-viewer-frame model-viewer {
+      width: 100%;
+      height: 100%;
+      --poster-color: transparent;
+    }
+
+    .model-hint {
+      font-size: 0.78rem;
+      color: #90e0ef;
+      margin-top: 8px;
+      opacity: 0.8;
+    }
+
+    .model-desc {
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: #c8e8f5;
+      margin-top: 6px;
+    }
+
+    .model-title {
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      color: #caf0f8;
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .model-subtitle {
+      font-family: 'Arial', sans-serif;
+      color: #90e0ef;
+      font-size: 0.7rem;
+      letter-spacing: 0.3px;
+      text-transform: none;
+      opacity: 0.75;
+      margin-left: 6px;
+    }
+
+    .project-row {
+      display: block;
+      background: rgba(0, 119, 255, 0.08);
+      border: 1px solid rgba(144, 224, 239, 0.25);
+      border-radius: 12px;
+      padding: 18px 20px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s ease;
+    }
+
+    a.project-row:hover {
+      background: rgba(0, 140, 255, 0.2);
+      border-color: #48cae4;
+      transform: translateX(-4px);
+    }
+
+    .project-row-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .project-emoji { font-size: 1.4rem; }
+
+    .project-name {
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      color: #caf0f8;
+      font-size: 1.15rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .project-link-tag {
+      margin-left: auto;
+      font-size: 0.7rem;
+      color: #0d1b2a;
+      background: #48cae4;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .project-desc {
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: #c8e8f5;
+      margin-bottom: 10px;
+    }
+
+    .project-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .project-tag {
+      font-size: 0.7rem;
+      color: #90e0ef;
+      border: 1px solid rgba(144,224,239,0.4);
+      padding: 3px 9px;
+      border-radius: 100px;
+    }
+
+    .projects-cta {
+      margin-top: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #00b4d8;
+      color: #0d1b2a;
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 12px 22px;
+      border-radius: 100px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .projects-cta:hover { background: #90e0ef; transform: translateY(-2px); }
+
+    /* --- About --- */
+    .about-block { margin-bottom: 34px; }
+
+    .about-heading {
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      color: #48cae4;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 1rem;
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(72,202,228,0.3);
+    }
+
+    .about-text {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: #dbeffb;
+    }
+    .about-text strong { color: #ffffff; }
+
+    .timeline-entry {
+      position: relative;
+      padding-left: 22px;
+      margin-bottom: 18px;
+    }
+    .timeline-entry:last-child { margin-bottom: 0; }
+    .timeline-entry::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 6px;
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: #00b4d8;
+      box-shadow: 0 0 8px rgba(0,180,216,0.7);
+    }
+    .timeline-entry::after {
+      content: '';
+      position: absolute;
+      left: 4px; top: 16px; bottom: -18px;
+      width: 1px;
+      background: rgba(144,224,239,0.25);
+    }
+    .timeline-entry:last-child::after { display: none; }
+
+    .timeline-year {
+      font-size: 0.72rem;
+      color: #90e0ef;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .timeline-title {
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      color: #ffffff;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      margin: 3px 0 2px;
+    }
+    .timeline-sub { font-size: 0.85rem; color: #9fd8ec; margin-bottom: 5px; }
+    .timeline-desc { font-size: 0.88rem; line-height: 1.6; color: #c8e8f5; }
+
+    .tag-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag-chip {
+      font-size: 0.78rem;
+      color: #0d1b2a;
+      background: #ade8f4;
+      padding: 5px 12px;
+      border-radius: 100px;
+      font-weight: 600;
+    }
+
+    .contact-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(144,224,239,0.15);
+      font-size: 0.9rem;
+      color: #dbeffb;
+      text-decoration: none;
+    }
+    a.contact-row:hover { color: #90e0ef; }
+    .contact-row:last-child { border-bottom: none; }
+    .contact-row-icon {
+      width: 30px; height: 30px;
+      background: rgba(0,140,255,0.15);
+      border: 1px solid rgba(144,224,239,0.3);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+      .content-page { padding: 90px 24px 60px; width: 100vw; border-left: none; }
+      .page-close { top: 18px; right: 18px; width: 46px; height: 46px; font-size: 1.9rem; }
+    }
+
+    /* --- BOUTON MUTE (simple, rond, classique) --- */
+    .music-toggle {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      z-index: 90;
+      width: 46px; height: 46px;
+      border-radius: 50%;
+      background: rgba(2, 12, 28, 0.65);
+      border: 1.5px solid #48cae4;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    body.is-started .music-toggle {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .music-toggle:hover {
+      background: rgba(0, 140, 255, 0.25);
+      border-color: #90e0ef;
+    }
+
+    .music-icon {
+      width: 19px; height: 19px;
+      fill: #90e0ef;
+    }
+    .music-icon .wave { opacity: 0; transition: opacity 0.2s ease; }
+    .music-toggle.is-playing .music-icon .wave { opacity: 1; }
+    .music-icon .mute-line { opacity: 1; transition: opacity 0.2s ease; }
+    .music-toggle.is-playing .music-icon .mute-line { opacity: 0; }
+  </style>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+</head>
+<body>
+
+  <video id="bg-video" autoplay muted playsinline loop>
+    <source src="menu.mp4" type="video/mp4">
+  </video>
+
+  <div class="start-screen" id="start-screen">
+    <div class="start-text">PRESS START</div>
+  </div>
+
+  <nav class="menu">
+    <div class="menu-item menu-name">Froshe</div>
+    <button type="button" class="menu-item" onclick="openPage('projets')">Projets</button>
+    <button type="button" class="menu-item" onclick="openPage('about')">About Me</button>
+    <a href="https://github.com/Froshe123" target="_blank" rel="noopener" class="menu-item">GitHub</a>
+    <button type="button" class="menu-item" onclick="openPage('modeles3d')">Modèle 3D</button>
+    <a href="https://letterboxd.com/frooshe/" target="_blank" rel="noopener" class="menu-item">Letterboxd</a>
+    <a href="cv.pdf" download="Axel_Kramer_CV.pdf" class="menu-item">Cv</a>
+  </nav>
+
+  <!-- ============ PAGE PROJETS ============ -->
+  <div class="content-page" id="page-projets">
+    <div class="page-eyebrow">Froshe · Dev &amp; 3D</div>
+    <div class="page-title">Projets</div>
+
+    <div class="projects-list">
+
+      <div class="project-row">
+        <div class="project-row-head">
+          <span class="project-emoji">🗄️</span>
+          <span class="project-name">Mini Base de données réseau</span>
+        </div>
+        <div class="project-desc">Conception et développement d'un système de BDD accessible en réseau. Architecture client-serveur avec gestion des requêtes et données persistantes.</div>
+        <div class="project-tags"><span class="project-tag">SQL</span><span class="project-tag">Réseau</span><span class="project-tag">Java</span></div>
+      </div>
+
+      <a class="project-row" href="https://github.com/Froshe123/Projet-jeu-modelisation" target="_blank" rel="noopener">
+        <div class="project-row-head">
+          <span class="project-emoji">🎮</span>
+          <span class="project-name">Jeu vidéo 3D</span>
+          <span class="project-link-tag">GitHub ↗</span>
+        </div>
+        <div class="project-desc">Développement d'un jeu 3D universitaire. Création de niveaux, assets 3D avec Blender et intégration dans Godot Engine.</div>
+        <div class="project-tags"><span class="project-tag">Godot</span><span class="project-tag">Blender</span><span class="project-tag">GDScript</span></div>
+      </a>
+
+      <div class="project-row">
+        <div class="project-row-head">
+          <span class="project-emoji">⚙️</span>
+          <span class="project-name">Projet génie logiciel</span>
+        </div>
+        <div class="project-desc">Initiation aux méthodes de travail en équipe, gestion de projet logiciel, méthodologies agiles et versionning Git.</div>
+        <div class="project-tags"><span class="project-tag">Git</span><span class="project-tag">Agile</span><span class="project-tag">Équipe</span></div>
+      </div>
+
+      <div class="project-row">
+        <div class="project-row-head">
+          <span class="project-emoji">🤖</span>
+          <span class="project-name">Jeu du 6 avec IA</span>
+        </div>
+        <div class="project-desc">Jeu du 6 en réseau avec une IA adversaire basée sur l'algorithme k-NN pour les décisions de jeu.</div>
+        <div class="project-tags"><span class="project-tag">Python</span><span class="project-tag">k-NN</span><span class="project-tag">IA</span><span class="project-tag">Réseau</span></div>
+      </div>
+
+      <a class="project-row" href="https://github.com/Froshe123/projet-php-helpdesk" target="_blank" rel="noopener">
+        <div class="project-row-head">
+          <span class="project-emoji">🎟️</span>
+          <span class="project-name">Mini Helpdesk (PHP)</span>
+          <span class="project-link-tag">GitHub ↗</span>
+        </div>
+        <div class="project-desc">Application web de création, consultation et traitement de tickets liés aux cours. Back-end PHP avec interface utilisateur.</div>
+        <div class="project-tags"><span class="project-tag">PHP</span><span class="project-tag">HTML/CSS</span><span class="project-tag">MySQL</span></div>
+      </a>
+
+      <a class="project-row" href="https://github.com/Froshe123/PikachuOPENGL" target="_blank" rel="noopener">
+        <div class="project-row-head">
+          <span class="project-emoji">🐾</span>
+          <span class="project-name">Pikachu en OpenGL</span>
+          <span class="project-link-tag">GitHub ↗</span>
+        </div>
+        <div class="project-desc">Modélisation 3D d'un Pikachu avec texturage et animation à partir de primitives graphiques OpenGL et transformations matricielles.</div>
+        <div class="project-tags"><span class="project-tag">OpenGL</span><span class="project-tag">C++</span><span class="project-tag">3D</span></div>
+      </a>
+
+      <div class="project-row">
+        <div class="project-row-head">
+          <span class="project-emoji">🕹️</span>
+          <span class="project-name">Jeu 2D collaboratif</span>
+        </div>
+        <div class="project-desc">Jeu 2D réalisé en équipe — mécaniques de jeu, gestion des sprites et collaboration entre membres du groupe.</div>
+        <div class="project-tags"><span class="project-tag">Godot</span><span class="project-tag">Équipe</span><span class="project-tag">2D</span></div>
+      </div>
+
+      <a class="project-row" href="https://github.com/Froshe123/projetGraphesDSATUR" target="_blank" rel="noopener">
+        <div class="project-row-head">
+          <span class="project-emoji">📊</span>
+          <span class="project-name">Algorithmes de Graphes</span>
+          <span class="project-link-tag">GitHub ↗</span>
+        </div>
+        <div class="project-desc">Implémentation de l'algorithme DSATUR et de l'algorithme glouton pour la coloration de graphes en C++.</div>
+        <div class="project-tags"><span class="project-tag">C++</span><span class="project-tag">Algorithmique</span><span class="project-tag">Graphes</span></div>
+      </a>
+
+      <a class="project-row" href="https://github.com/Froshe123/Fourier" target="_blank" rel="noopener">
+        <div class="project-row-head">
+          <span class="project-emoji">📈</span>
+          <span class="project-name">Séries de Fourier</span>
+          <span class="project-link-tag">GitHub ↗</span>
+        </div>
+        <div class="project-desc">Implémentation d'algorithmes de transformées de Fourier 1D et 2D (méthode lente et rapide / FFT) en Java.</div>
+        <div class="project-tags"><span class="project-tag">Java</span><span class="project-tag">Mathématiques</span><span class="project-tag">Signaux</span></div>
+      </a>
+
+      <a class="projects-cta" href="https://github.com/Froshe123" target="_blank" rel="noopener">Voir tout GitHub →</a>
+    </div>
+  </div>
+
+  <!-- ============ PAGE ABOUT ME ============ -->
+  <div class="content-page" id="page-about">
+    <div class="page-eyebrow">Froshe · Dev &amp; 3D</div>
+    <div class="page-title">About Me</div>
+
+    <div class="about-block">
+      <div class="about-heading">Profil</div>
+      <div class="about-text">
+        Étudiant en <strong>Licence Mathématiques &amp; Informatique</strong> à l'Université de Bourgogne (Dijon), je souhaite intégrer un <strong>Master BDIA</strong> (Bases de données &amp; Intelligence Artificielle) en alternance à partir de septembre 2026.<br><br>
+        Sérieux, motivé et curieux, j'aime créer des projets concrets mêlant <strong>développement</strong>, <strong>3D</strong> et <strong>intelligence artificielle</strong>.
+      </div>
+    </div>
+
+    <div class="about-block">
+      <div class="about-heading">Formation</div>
+      <div class="timeline-entry">
+        <div class="timeline-year">2023 — 2026</div>
+        <div class="timeline-title">Licence Mathématiques &amp; Informatique</div>
+        <div class="timeline-sub">Université de Bourgogne, Dijon</div>
+        <div class="timeline-desc">Analyse, algèbre linéaire, Java / C / C++ / Python, POO, bases de données PL/SQL, synthèse d'image, développement Godot Engine et modélisation Blender.</div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-year">2022 — 2023</div>
+        <div class="timeline-title">Prépa ECG</div>
+        <div class="timeline-sub">Lycée Carnot, Dijon</div>
+        <div class="timeline-desc">Formation exigeante développant rigueur, méthode de travail et capacités d'analyse.</div>
+      </div>
+    </div>
+
+    <div class="about-block">
+      <div class="about-heading">Expérience professionnelle</div>
+      <div class="timeline-entry">
+        <div class="timeline-year">Sept. 2024 — Mars 2026</div>
+        <div class="timeline-title">Assistant Comptable</div>
+        <div class="timeline-sub">Puces 39, Petit-Noir</div>
+        <div class="timeline-desc">Suivi comptable, traitement des documents administratifs et gestion courante du commerce.</div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-year">Vacances scolaires</div>
+        <div class="timeline-title">Emplois saisonniers</div>
+        <div class="timeline-sub">Divers secteurs</div>
+        <div class="timeline-desc">Plusieurs expériences en jobs étudiants : adaptabilité, sens des responsabilités et rigueur.</div>
+      </div>
+    </div>
+
+    <div class="about-block">
+      <div class="about-heading">Langues</div>
+      <div class="tag-chip-row">
+        <span class="tag-chip">🇫🇷 Français — Langue maternelle</span>
+        <span class="tag-chip">🇬🇧 Anglais — Niveau B2</span>
+      </div>
+    </div>
+
+    <div class="about-block">
+      <div class="about-heading">Compétences clés</div>
+      <div class="tag-chip-row">
+        <span class="tag-chip">Java</span>
+        <span class="tag-chip">Python</span>
+        <span class="tag-chip">C / C++</span>
+        <span class="tag-chip">C#</span>
+        <span class="tag-chip">SQL / PL-SQL</span>
+        <span class="tag-chip">PHP</span>
+        <span class="tag-chip">HTML / CSS / JS</span>
+        <span class="tag-chip">Godot Engine</span>
+        <span class="tag-chip">Blender</span>
+        <span class="tag-chip">Arduino</span>
+        <span class="tag-chip">Git</span>
+      </div>
+    </div>
+
+    <div class="about-block">
+      <div class="about-heading">Loisirs &amp; Intérêts</div>
+      <div class="tag-chip-row">
+        <span class="tag-chip">🎮 Jeux vidéo</span>
+        <span class="tag-chip">🤖 Nouvelles technologies</span>
+        <span class="tag-chip">🎬 Cinéma</span>
+        <span class="tag-chip">🎨 Modélisation 3D</span>
+        <span class="tag-chip">💻 Open Source</span>
+        <span class="tag-chip">🧠 IA</span>
+      </div>
+    </div>
+
+    <div class="about-block">
+      <div class="about-heading">Contact</div>
+      <a class="contact-row" href="mailto:krameraxel2@gmail.com">
+        <span class="contact-row-icon">✉️</span> krameraxel2@gmail.com
+      </a>
+      <a class="contact-row" href="tel:+33608551967">
+        <span class="contact-row-icon">📱</span> +33 6 08 55 19 67
+      </a>
+      <div class="contact-row">
+        <span class="contact-row-icon">📍</span> Dijon, France (21)
+      </div>
+      <a class="contact-row" href="https://github.com/Froshe123" target="_blank" rel="noopener">
+        <span class="contact-row-icon">🐙</span> github.com/Froshe123
+      </a>
+    </div>
+  </div>
+
+  <!-- ============ PAGE MODÈLES 3D ============ -->
+  <div class="content-page" id="page-modeles3d">
+    <div class="page-eyebrow">Froshe · Blender</div>
+    <div class="page-title">Modèle 3D</div>
+
+    <div class="model-block">
+      <div class="model-title">Givrali <span class="model-subtitle">(Pokémon)</span></div>
+      <div class="model-viewer-frame">
+        <model-viewer
+          src="model1.glb"
+          loading="eager"
+          reveal="auto"
+          alt="Modèle 3D de Givrali, Pokémon"
+          camera-controls
+          auto-rotate
+          auto-rotate-delay="1500"
+          rotation-per-second="18deg"
+          shadow-intensity="1"
+          exposure="1"
+          environment-image="neutral"
+          style="background-color: transparent;">
+        </model-viewer>
+      </div>
+      <div class="model-hint">Clique-glisse pour tourner, molette pour zoomer.</div>
+      <div class="model-desc">Givrali est un Pokémon de type Glace, l'une des évolutions élémentaires d'Évoli.</div>
+    </div>
+
+    <div class="model-block">
+      <div class="model-title">Moustillon <span class="model-subtitle">(Pokémon)</span></div>
+      <div class="model-viewer-frame">
+        <model-viewer
+          src="model2.glb"
+          loading="eager"
+          reveal="auto"
+          alt="Modèle 3D de Moustillon, Pokémon"
+          camera-controls
+          auto-rotate
+          auto-rotate-delay="1500"
+          rotation-per-second="18deg"
+          shadow-intensity="1"
+          exposure="1"
+          environment-image="neutral"
+          style="background-color: transparent;">
+        </model-viewer>
+      </div>
+      <div class="model-hint">Clique-glisse pour tourner, molette pour zoomer.</div>
+      <div class="model-desc">Moustillon est un Pokémon de type Eau/Fée, forme évoluée de Marill.</div>
+    </div>
+
+    <div class="model-block">
+      <div class="model-title">Manny Calavera <span class="model-subtitle">(Grim Fandango)</span></div>
+      <div class="model-viewer-frame">
+        <model-viewer
+          src="model3.glb"
+          loading="eager"
+          reveal="auto"
+          alt="Modèle 3D de Manny Calavera, personnage de Grim Fandango"
+          camera-controls
+          auto-rotate
+          auto-rotate-delay="1500"
+          rotation-per-second="18deg"
+          shadow-intensity="1"
+          exposure="1"
+          environment-image="neutral"
+          style="background-color: transparent;">
+        </model-viewer>
+      </div>
+      <div class="model-hint">Clique-glisse pour tourner, molette pour zoomer.</div>
+      <div class="model-desc">Manny Calavera est le protagoniste du jeu vidéo Grim Fandango, sorti par LucasArts en 1998.</div>
+    </div>
+  </div>
+
+  <div class="page-close" id="page-close" onclick="closePage()">×</div>
+
+  <audio id="bg-music" src="music.mp3" loop preload="auto"></audio>
+  <div class="music-toggle" id="music-toggle" onclick="toggleMusic()">
+    <svg class="music-icon" viewBox="0 0 24 24">
+      <path d="M4 9v6h4l5 5V4L8 9H4z"/>
+      <path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="#90e0ef" stroke-width="1.8" stroke-linecap="round"/>
+      <path class="wave" d="M19 6a9 9 0 0 1 0 12" fill="none" stroke="#90e0ef" stroke-width="1.8" stroke-linecap="round"/>
+      <path class="mute-line" d="M16 8l5 8M21 8l-5 8" stroke="#90e0ef" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <script>
+    const video = document.getElementById('bg-video');
+    const startScreen = document.getElementById('start-screen');
+
+    startScreen.addEventListener('click', () => {
+      document.body.classList.add('is-started');
+      startMusic();
+    });
+
+    // --- Musique de fond ---
+    const music = document.getElementById('bg-music');
+    const musicToggle = document.getElementById('music-toggle');
+    music.volume = 0.25;
+
+    function startMusic() {
+      music.play().then(() => {
+        musicToggle.classList.add('is-playing');
+      }).catch(() => {
+        // Lecture auto bloquée par le navigateur : l'utilisateur pourra la lancer via le bouton
+        musicToggle.classList.remove('is-playing');
+      });
+    }
+
+    function toggleMusic() {
+      if (music.paused) {
+        music.play();
+        musicToggle.classList.add('is-playing');
+      } else {
+        music.pause();
+        musicToggle.classList.remove('is-playing');
+      }
+    }
+
+    // --- Navigation entre les pages de contenu ---
+    let currentPage = null;
+
+    function openPage(id) {
+      if (!document.body.classList.contains('is-started')) return;
+      closePage(false);
+      currentPage = document.getElementById('page-' + id);
+      currentPage.classList.add('is-open');
+      document.body.classList.add('page-open');
+      currentPage.scrollTop = 0;
+    }
+
+    function closePage(clearFlag = true) {
+      document.querySelectorAll('.content-page.is-open').forEach(p => p.classList.remove('is-open'));
+      if (clearFlag) document.body.classList.remove('page-open');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closePage();
+    });
+  </script>
+</body>
+</html>
